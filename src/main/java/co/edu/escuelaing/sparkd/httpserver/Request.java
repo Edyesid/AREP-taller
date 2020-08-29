@@ -8,10 +8,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * this class represent the HTTP request line
- * @author dnielben
- */
 public class Request {
     
     private String method;

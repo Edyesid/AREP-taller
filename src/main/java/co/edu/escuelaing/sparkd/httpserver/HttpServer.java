@@ -1,11 +1,12 @@
 package co.edu.escuelaing.sparkd.httpserver;
 
+import co.edu.escuelaing.sparkd.spring.MicroSpring;
 import java.net.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,15 +15,35 @@ public class HttpServer {
 
     private int port = 36000;
     private boolean running = false;
+    private MicroSpring iocServer;
 
     public HttpServer() {
+    }
+
+    public HttpServer(MicroSpring iocServer) {
+        this.iocServer = iocServer;
     }
 
     public HttpServer(int port) {
         this.port = port;
     }
 
+    /**
+     * Funcion que retorna el número del puerto por el cual se correrá el
+     * servicio.
+     *
+     * @return El número de puerto del servicio.
+     */
+    static int getPort() {
+        if (System.getenv("PORT") != null) {
+            return Integer.parseInt(System.getenv("PORT"));
+        }
+        return 36000;
+    }
+
     public void start() {
+        
+        port = getPort();
         try {
             ServerSocket serverSocket = null;
 
@@ -78,13 +99,15 @@ public class HttpServer {
                 break;
             }
         }
-        Request req = new Request(request.get("requestLine"));
+        if (request.get("requestLine") != null) {
+            Request req = new Request(request.get("requestLine"));
 
-        System.out.println("RequestLine: " + req);
+            System.out.println("RequestLine: " + req);
 
-        createResponse(req, new PrintWriter(
-                clientSocket.getOutputStream(), true));
-        in.close();
+            createResponse(req, new PrintWriter(
+                    clientSocket.getOutputStream(), true));
+            in.close();
+        }
     }
 
     private String[] createEntry(String rawEntry) {
@@ -95,6 +118,8 @@ public class HttpServer {
         String outputLine = testResponse();
         URI theuri = req.getTheuri();
         if (theuri.getPath().startsWith("/Apps")) {
+            String appuri = theuri.getPath().substring(5);
+            invokeApp(appuri, out);
         } else {
             getStaticResource(theuri.getPath(), out);
         }
@@ -119,15 +144,15 @@ public class HttpServer {
     }
 
     private void getStaticResource(String path, PrintWriter out) {
-        Path file = Path.of("target/classes/public_html" + path);
+        Path file = Paths.get("target/classes/public_html" + path);
         try (InputStream in = Files.newInputStream(file);
                 BufferedReader reader
                 = new BufferedReader(new InputStreamReader(in))) {
             String header = "HTTP/1.1 200 OK\r\n"
-                + "Content-Type: text/html\r\n"
-                + "\r\n";
+                    + "Content-Type: text/html\r\n"
+                    + "\r\n";
             out.println(header);
-            String line = null; 
+            String line = null;
             while ((line = reader.readLine()) != null) {
                 out.println(line);
                 System.out.println(line);
@@ -135,5 +160,14 @@ public class HttpServer {
         } catch (IOException ex) {
             Logger.getLogger(HttpServer.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private void invokeApp(String appuri, PrintWriter out) {
+
+        String header = "HTTP/1.1 200 OK\r\n"
+                + "Content-Type: text/html\r\n"
+                + "\r\n";
+        String methodresponse = iocServer.invoke(appuri);
+        out.println(header + methodresponse);
     }
 }

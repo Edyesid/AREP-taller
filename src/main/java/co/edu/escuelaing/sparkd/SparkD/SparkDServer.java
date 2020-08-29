@@ -7,10 +7,6 @@ package co.edu.escuelaing.sparkd.SparkD;
 
 import co.edu.escuelaing.sparkd.httpserver.HttpServer;
 
-/**
- *
- * @author dnielben
- */
 public class SparkDServer {
     
     public static void main(String[] args){
