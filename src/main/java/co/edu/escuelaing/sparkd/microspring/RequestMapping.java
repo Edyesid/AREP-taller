@@ -1,5 +1,5 @@
 
-package co.edu.escuelaing.sparkd.spring;
+package co.edu.escuelaing.sparkd.microspring;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
