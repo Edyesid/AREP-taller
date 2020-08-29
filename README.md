@@ -1,6 +1,6 @@
 # AREP-taller-Spring
  
-## DE eclipse 
+## IDE eclipse 
 
 ![run](imagenes/run.png)
 
